@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # FirstProject
 
 새로운 Python 프로젝트
@@ -17,3 +18,6 @@ pip install -r requirements.txt
 ## 사용법
 
 TBD
+=======
+초기 Repo 시작. 별거 없음
+>>>>>>> 2161130c9969f0b894ccdbcd3e571342edd8c63a
