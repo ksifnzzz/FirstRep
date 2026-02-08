@@ -1,0 +1,6 @@
+# CursorProject dependencies
+# pip install -r requirements.txt
+
+# 예시 (필요 시 추가):
+# requests>=2.28.0
+# pytest>=7.0.0
