@@ -1,5 +1,7 @@
 # CursorProject — 새 Python 프로젝트 & 기존 GitHub 저장소 연결 계획
 
+**환경: Windows** — 아래 명령은 PowerShell 기준입니다.
+
 ## 1단계: 로컬 프로젝트 구조 만들기 ✅
 
 - [x] 표준 Python 프로젝트 폴더 구조
@@ -23,15 +25,29 @@ CursorProject/
 
 ## 2단계: 가상 환경 설정
 
+**순서:** ① 가상 환경 생성 → ② 활성화. `.venv` 폴더가 없으면 활성화 스크립트를 찾을 수 없습니다.
+
 ```powershell
-# 프로젝트 폴더에서
+# ① 먼저 가상 환경 생성 (프로젝트 폴더에서)
 python -m venv .venv
 
-# 활성화 (Windows PowerShell)
+# ② 그 다음 활성화 (Windows PowerShell)
+.\.venv\Scripts\Activate.ps1
+
+# ③ 의존성 설치 (선택)
+pip install -r requirements.txt
+```
+
+**"스크립트를 실행할 수 없습니다" 오류가 나면** (실행 정책 제한):
+```powershell
+# 현재 PowerShell 창에서만 스크립트 허용 (이 세션에만 적용)
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# 그 다음 다시 활성화
 .\.venv\Scripts\Activate.ps1
 ```
 
-`.venv`는 이미 `.gitignore`에 포함되어 있어 GitHub에 올라가지 않습니다.
+- `python`이 안 되면 `py -m venv .venv` 시도.
+- `.venv`는 이미 `.gitignore`에 포함되어 있어 GitHub에 올라가지 않습니다.
 
 ---
 
@@ -94,7 +110,7 @@ git commit -m "Initial commit: Python project setup"
 | 단계 | 내용 | 완료 |
 |------|------|------|
 | 1 | 프로젝트 구조 생성 | ✅ |
-| 2 | 가상 환경 생성 및 활성화 | ⬜ |
-| 3 | `git init` 및 첫 커밋 | ⬜ |
+| 2 | 가상 환경 생성 및 활성화 | ✅ |
+| 3 | `git init` 및 첫 커밋 | ✅ |
 | 4 | 기존 GitHub 저장소 연결 | ⬜ |
 | 5 | `remote` 추가 및 `push` | ⬜ |

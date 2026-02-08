@@ -1,6 +1,6 @@
 # CursorProject
 
-Python 프로젝트 템플릿입니다.
+Python 프로젝트 템플릿입니다. (환경: Windows, PowerShell)
 
 ## 설정
 
