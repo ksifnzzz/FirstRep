@@ -112,5 +112,5 @@ git commit -m "Initial commit: Python project setup"
 | 1 | 프로젝트 구조 생성 | ✅ |
 | 2 | 가상 환경 생성 및 활성화 | ✅ |
 | 3 | `git init` 및 첫 커밋 | ✅ |
-| 4 | 기존 GitHub 저장소 연결 | ⬜ |
-| 5 | `remote` 추가 및 `push` | ⬜ |
+| 4 | 기존 GitHub 저장소 연결 | ✅ |
+| 5 | `remote` 추가 및 `push` | ✅ |
