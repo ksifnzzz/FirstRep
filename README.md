@@ -22,19 +22,19 @@ pytest
 Daily KR stock data:
 
 ```bash
-stock-collector --market KR --symbol 005930 --start 2020-01-01 --end 2024-12-31 --freq daily --output data/005930_daily.parquet
+stock-collector --market KR --symbol 005930 --start 2020-01-01 --end 2024-12-31 --freq daily --output output/005930_daily.parquet
 ```
 
 Monthly US stock data:
 
 ```bash
-stock-collector --market US --symbol AAPL --start 2018-01-01 --end 2024-12-31 --freq monthly --output data/AAPL_monthly.csv
+stock-collector --market US --symbol AAPL --start 2018-01-01 --end 2024-12-31 --freq monthly --output output/AAPL_monthly.csv
 ```
 
 BAA 2-year monthly adjusted-close matrix (date + assets as columns):
 
 ```bash
-baa-export --years 2 --output data/baa_monthly_adjclose_2y.csv
+baa-export --years 2 --output output/baa_monthly_adjclose_2y.csv
 ```
 
 ## Notes

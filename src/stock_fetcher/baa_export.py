@@ -94,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
     _ = parser.add_argument("--years", type=int, default=2, help="Recent years to fetch (default: 2)")
     _ = parser.add_argument(
         "--output",
-        default="data/baa_monthly_adjclose_2y.csv",
+        default="output/baa_monthly_adjclose_2y.csv",
         help="Output file path (.csv or .xlsx)",
     )
     return parser
