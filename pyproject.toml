@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stock-data-collector"
+version = "0.1.0"
+description = "KR/US stock daily and monthly OHLCV data collector"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "finance-datareader>=0.9.102",
+  "pandas>=2.1.0",
+  "pykrx>=1.0.51",
+  "python-dateutil>=2.9.0",
+  "yfinance>=0.2.40",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.6.0",
+]
+
+[project.scripts]
+stock-collector = "stock_fetcher.cli:main"
+baa-export = "stock_fetcher.baa_export:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stock_fetcher"]
