@@ -56,6 +56,35 @@ class TestFetchStockData:
         # 영문: 미국 주식으로 자동 판단
         df_us = fetch_stock_data("AAPL", start_date, end_date)
         assert isinstance(df_us, pd.DataFrame)
+    
+    def test_invalid_interval(self):
+        """잘못된 interval 값 테스트"""
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        
+        with pytest.raises(ValueError):
+            fetch_stock_data("AAPL", start_date, end_date, interval="weekly")
+    
+    def test_monthly_interval_us(self):
+        """미국 주식 월간 데이터 조회 테스트"""
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        
+        df = fetch_stock_data("AAPL", start_date, end_date, interval="monthly")
+        
+        assert isinstance(df, pd.DataFrame)
+        assert "Close" in df.columns
+    
+    def test_monthly_interval_korean(self):
+        """한국 주식 월간 데이터 조회 테스트"""
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        
+        df = fetch_stock_data("005930", start_date, end_date, interval="monthly")
+        
+        assert isinstance(df, pd.DataFrame)
+        assert "Close" in df.columns
+        assert "ChangeRate" in df.columns
 
 
 class TestFetchMultipleStocks:
@@ -67,7 +96,7 @@ class TestFetchMultipleStocks:
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
         
         tickers = ["AAPL", "GOOGL"]
-        results = fetch_multiple_stocks(tickers, start_date, end_date, market="US")
+        results = fetch_multiple_stocks(tickers, start_date, end_date)
         
         assert isinstance(results, dict)
         assert len(results) > 0

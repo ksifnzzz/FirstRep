@@ -1,10 +1,8 @@
-"""
-주식 데이터 조회 모듈
-한국 또는 미국 주식/ETF의 일봉 데이터를 조회합니다.
-"""
+"""Stock data retrieval module."""
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal
+
 import pandas as pd
 import yfinance as yf
 from pykrx import stock
@@ -14,103 +12,90 @@ def fetch_stock_data(
     ticker: str,
     start_date: str,
     end_date: str,
-    market: Optional[Literal["KR", "US"]] = None
+    interval: Literal["daily", "monthly"] = "daily",
 ) -> pd.DataFrame:
-    """
-    한국 또는 미국 주식/ETF의 일봉 데이터를 조회합니다.
-    
-    Parameters:
-    -----------
-    ticker : str
-        주식 티커 심볼 (예: "005930" for 삼성전자, "AAPL" for Apple)
-    start_date : str
-        시작 날짜 (형식: "YYYY-MM-DD")
-    end_date : str
-        종료 날짜 (형식: "YYYY-MM-DD")
-    market : Optional[Literal["KR", "US"]]
-        시장 구분 ("KR": 한국, "US": 미국)
-        None이면 자동으로 판단 (6자리 숫자면 한국, 아니면 미국)
-    
-    Returns:
-    --------
-    pd.DataFrame
-        날짜, 시가, 고가, 저가, 종가, 거래량 등이 포함된 데이터프레임
-    
-    Examples:
-    ---------
-    >>> df = fetch_stock_data("005930", "2024-01-01", "2024-12-31")  # 삼성전자
-    >>> df = fetch_stock_data("AAPL", "2024-01-01", "2024-12-31", market="US")  # Apple
-    """
-    
-    # 시장 자동 판단
-    if market is None:
-        if ticker.isdigit() and len(ticker) == 6:
-            market = "KR"
-        else:
-            market = "US"
-    
-    # 날짜 형식 검증
+    """Fetch OHLCV data for KR/US stocks and ETFs using auto market detection."""
+    if interval not in ["daily", "monthly"]:
+        raise ValueError("interval must be either 'daily' or 'monthly'.")
+
+    detected_market = "KR" if ticker.isdigit() and len(ticker) == 6 else "US"
+
     try:
-        _start = datetime.strptime(start_date, "%Y-%m-%d")
-        _end = datetime.strptime(end_date, "%Y-%m-%d")
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
     except ValueError as e:
-        raise ValueError(f"날짜 형식이 잘못되었습니다. YYYY-MM-DD 형식을 사용하세요: {e}")
-    
-    if _start > _end:
-        raise ValueError("시작 날짜가 종료 날짜보다 늦을 수 없습니다.")
-    
-    # 한국 주식 조회
-    if market == "KR":
+        raise ValueError(
+            f"Invalid date format. Use YYYY-MM-DD format. {e}"
+        ) from e
+
+    if start_dt > end_dt:
+        raise ValueError("start_date cannot be later than end_date.")
+
+    if detected_market == "KR":
         try:
-            df = stock.get_market_ohlcv(start_date, end_date, ticker)
-            # pykrx는 [시가, 고가, 저가, 종가, 거래량, 등락률] 반환
-            df.columns = ["Open", "High", "Low", "Close", "Volume", "ChangeRate"]
+            # Always fetch daily data first to ensure column consistency and handle resampling manually
+            df = stock.get_market_ohlcv(start_date, end_date, ticker, "d")
+
+            if df.empty:
+                raise ValueError(f"No data found for ticker: {ticker}")
+
+            # Select first 5 columns (Open, High, Low, Close, Volume) to avoid length mismatch
+            df = df.iloc[:, :5]
+            df.columns = ["Open", "High", "Low", "Close", "Volume"]
+
+            if interval == "monthly":
+                # Manual resampling to avoid "Invalid frequency: M" error and ensure consistency
+                try:
+                    resampler = df.resample("ME")
+                except ValueError:
+                    resampler = df.resample("M")
+                
+                df = resampler.agg({
+                    "Open": "first",
+                    "High": "max",
+                    "Low": "min",
+                    "Close": "last",
+                    "Volume": "sum"
+                })
+                df["ChangeRate"] = df["Close"].pct_change().fillna(0) * 100
+                df = df.dropna()
+
             df.index.name = "Date"
             return df
         except Exception as e:
-            raise ValueError(f"한국 주식 데이터 조회 실패 (티커: {ticker}): {e}")
-    
-    # 미국 주식 조회
-    elif market == "US":
-        try:
-            df = yf.download(ticker, start=start_date, end=end_date, progress=False)
-            if df.empty:
-                raise ValueError(f"데이터를 찾을 수 없습니다. 티커가 정확한지 확인하세요: {ticker}")
-            return df
-        except Exception as e:
-            raise ValueError(f"미국 주식 데이터 조회 실패 (티커: {ticker}): {e}")
+            raise ValueError(
+                f"Failed to fetch KR stock data (ticker: {ticker}, interval: {interval}): {e}"
+            ) from e
+
+    try:
+        yf_interval = "1d" if interval == "daily" else "1mo"
+        df = yf.download(
+            ticker,
+            start=start_date,
+            end=end_date,
+            interval=yf_interval,
+            progress=False,
+        )
+        if df.empty:
+            raise ValueError(f"No data found for ticker: {ticker}")
+        return df
+    except Exception as e:
+        raise ValueError(
+            f"Failed to fetch US stock data (ticker: {ticker}, interval: {interval}): {e}"
+        ) from e
 
 
 def fetch_multiple_stocks(
     tickers: list[str],
     start_date: str,
     end_date: str,
-    market: Optional[Literal["KR", "US"]] = None
+    interval: Literal["daily", "monthly"] = "daily",
 ) -> dict[str, pd.DataFrame]:
-    """
-    여러 주식의 일봉 데이터를 한 번에 조회합니다.
-    
-    Parameters:
-    -----------
-    tickers : list[str]
-        주식 티커 심볼 리스트
-    start_date : str
-        시작 날짜 (형식: "YYYY-MM-DD")
-    end_date : str
-        종료 날짜 (형식: "YYYY-MM-DD")
-    market : Optional[Literal["KR", "US"]]
-        시장 구분
-    
-    Returns:
-    --------
-    dict[str, pd.DataFrame]
-        {티커: 데이터프레임} 형식의 딕셔너리
-    """
-    result = {}
+    """Fetch OHLCV data for multiple stock tickers."""
+    result: dict[str, pd.DataFrame] = {}
     for ticker in tickers:
         try:
-            result[ticker] = fetch_stock_data(ticker, start_date, end_date, market)
+            result[ticker] = fetch_stock_data(ticker, start_date, end_date, interval)
         except ValueError as e:
-            print(f"⚠️  {ticker} 조회 중 오류: {e}")
-    
+            print(f"Warning: failed to fetch {ticker}: {e}")
     return result
